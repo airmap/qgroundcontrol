@@ -21,6 +21,10 @@ AppDir:
     include:
       - libgdal20
       - libgdal-dev
+      - libgstreamer-gl1.0-0
+      - libasound2
+      - libpulse0
+      - libwayland-cursor0
 
   files:
     include:
