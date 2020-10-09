@@ -90,6 +90,8 @@ echo ${QGC_CUSTOM_APP_NAME} Version: ${VERSION}
 # Go out of AppImage
 cd ${TMPDIR}
 cp ${QGC_SRC}/deploy/QGroundControl.yml ${TMPDIR}
+mkdir -p ${APPDIR}/usr/share/icons/128x128
+cp ${QGC_CUSTOM_APP_ICON} ${APPDIR}/usr/share/icons/128x128/
 appimage-builder --recipe QGroundControl.yml
 
 cp ${TMPDIR}/$APP".AppImage" ${OUTPUT_DIR}/$APP".AppImage"
