@@ -89,10 +89,7 @@ echo ${QGC_CUSTOM_APP_NAME} Version: ${VERSION}
 
 # Go out of AppImage
 cd ${TMPDIR}
-wget -c --quiet "https://github.com/probonopd/AppImageKit/releases/download/5/AppImageAssistant" # (64-bit)
-chmod a+x ./AppImageAssistant
-
-./AppImageAssistant ./$APP.AppDir/ ${TMPDIR}/$APP".AppImage"
+cp ${QGC_SRC}/deploy/QGroundControl.yml ${TMPDIR}
+appimage-builder --recipe QGroundControl.yml
 
 cp ${TMPDIR}/$APP".AppImage" ${OUTPUT_DIR}/$APP".AppImage"
-
