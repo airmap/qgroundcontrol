@@ -25,6 +25,7 @@ AppDir:
       - libasound2
       - libpulse0
       - libwayland-cursor0
+      - coreutils
 
   files:
     include:
@@ -33,7 +34,8 @@ AppDir:
   runtime:
     env:
       APPDIR_LIBRARY_PATH: $APPDIR/usr/lib/x86_64-linux-gnu:$APPDIR/Qt/libs:$APPDIR/libs
-
+      PATH: $APPDIR/
+      
   test:
     debian:
       image: appimagecrafters/tests-env:debian-stable
