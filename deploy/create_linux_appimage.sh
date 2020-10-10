@@ -13,7 +13,7 @@ QGC_CUSTOM_APP_NAME="${QGC_CUSTOM_APP_NAME:-QGroundControl}"
 QGC_CUSTOM_GENERIC_NAME="${QGC_CUSTOM_GENERIC_NAME:-Ground Control Station}"
 QGC_CUSTOM_BINARY_NAME="${QGC_CUSTOM_BINARY_NAME:-QGroundControl}"
 QGC_CUSTOM_LINUX_START_SH="${QGC_CUSTOM_LINUX_START_SH:-${QGC_SRC}/deploy/qgroundcontrol-start.sh}"
-QGC_CUSTOM_APP_ICON="${QGC_CUSTOM_APP_ICON:-${QGC_SRC}/resources/icons/qgroundcontrol.png}"
+export QGC_CUSTOM_APP_ICON="${QGC_CUSTOM_APP_ICON:-${QGC_SRC}/resources/icons/qgroundcontrol.png}"
 QGC_CUSTOM_APP_ICON_NAME="${QGC_CUSTOM_APP_ICON_NAME:-QGroundControl}"
 
 if [ ! -f ${QGC_SRC}/qgroundcontrol.pro ]; then
@@ -37,7 +37,7 @@ echo "Output directory:" ${OUTPUT_DIR}
 APP=${QGC_CUSTOM_BINARY_NAME}
 
 TMPDIR=`mktemp -d`
-APPDIR=${TMPDIR}/$APP".AppDir"
+export APPDIR=${TMPDIR}/$APP".AppDir"
 mkdir -p ${APPDIR}
 
 cd ${TMPDIR}
@@ -90,8 +90,6 @@ echo ${QGC_CUSTOM_APP_NAME} Version: ${VERSION}
 # Go out of AppImage
 cd ${TMPDIR}
 cp ${QGC_SRC}/deploy/QGroundControl.yml ${TMPDIR}
-mkdir -p ${APPDIR}/usr/share/icons/128x128
-cp ${QGC_CUSTOM_APP_ICON} ${APPDIR}/usr/share/icons/128x128/
-appimage-builder --recipe QGroundControl.yml
+appimage-builder --recipe QGroundControl.yml --skip-test
 
-cp ${TMPDIR}/$APP".AppImage" ${OUTPUT_DIR}/$APP".AppImage"
+cp ${TMPDIR}/*".AppImage" ${OUTPUT_DIR}/

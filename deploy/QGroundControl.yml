@@ -1,5 +1,9 @@
 version: 1
 
+script:
+  - mkdir -p ${APPDIR}/usr/share/icons/128x128
+  - cp ${QGC_CUSTOM_APP_ICON} ${APPDIR}/usr/share/icons/128x128/
+      
 AppDir:
   path: ./QGroundControl.AppDir
 
@@ -8,7 +12,7 @@ AppDir:
     name: Ground Control Station
     icon: qgroundcontrol
     version: 4.0.0
-    exec: qgroundcontrol-start.sh
+    exec: QGroundControl
 
   apt:
     arch: amd64
@@ -19,8 +23,6 @@ AppDir:
       - sourceline: 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ bionic-backports main restricted universe multiverse'
 
     include:
-      - libgdal20
-      - libgdal-dev
       - libgstreamer-gl1.0-0
       - libasound2
       - libpulse0
@@ -35,7 +37,9 @@ AppDir:
     env:
       APPDIR_LIBRARY_PATH: $APPDIR/usr/lib/x86_64-linux-gnu:$APPDIR/Qt/libs:$APPDIR/libs
       PATH: $APPDIR/
-      
+      QML2_IMPORT_PATH: $APPDIR/Qt/qml
+      QT_PLUGIN_PATH: $APPDIR/Qt/plugins
+
   test:
     debian:
       image: appimagecrafters/tests-env:debian-stable
