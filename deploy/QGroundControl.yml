@@ -9,7 +9,7 @@ AppDir:
 
   app_info:
     id: org.mavlink.qgroundcontrol
-    name: Ground Control Station
+    name: QGroundControl
     icon: qgroundcontrol
     version: 4.0.0
     exec: QGroundControl
@@ -23,6 +23,8 @@ AppDir:
       - sourceline: 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ bionic-backports main restricted universe multiverse'
 
     include:
+      - libgdal20
+      - libgdal-dev
       - libgstreamer-gl1.0-0
       - libasound2
       - libpulse0
@@ -35,8 +37,8 @@ AppDir:
       
   runtime:
     env:
-      APPDIR_LIBRARY_PATH: $APPDIR/usr/lib/x86_64-linux-gnu:$APPDIR/Qt/libs:$APPDIR/libs
-      PATH: $APPDIR/
+      APPDIR_LIBRARY_PATH: $APPDIR/usr/lib/x86_64-linux-gnu:$APPDIR/Qt/libs:$APPDIR/libs:$LD_LIBRARY_PATH
+      PATH: '${APPDIR}/:${PATH}'
       QML2_IMPORT_PATH: $APPDIR/Qt/qml
       QT_PLUGIN_PATH: $APPDIR/Qt/plugins
 
