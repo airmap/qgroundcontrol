@@ -3,6 +3,8 @@ version: 1
 script:
   - mkdir -p ${APPDIR}/usr/share/icons/128x128
   - cp ${QGC_CUSTOM_APP_ICON} ${APPDIR}/usr/share/icons/128x128/
+  - mkdir -p ${APPDIR}/usr/share/applications
+  - cp ${APPDIR}/qgroundcontrol.desktop ${APPDIR}/usr/share/applications/org.mavlink.qgroundcontrol.desktop
       
 AppDir:
   path: ./QGroundControl.AppDir
@@ -24,12 +26,12 @@ AppDir:
 
     include:
       - libgdal20
-      - libgdal-dev
       - libgstreamer-gl1.0-0
       - libasound2
       - libpulse0
       - libwayland-cursor0
       - coreutils
+      - libjson-c3
 
   files:
     include:
@@ -37,7 +39,7 @@ AppDir:
       
   runtime:
     env:
-      APPDIR_LIBRARY_PATH: $APPDIR/usr/lib/x86_64-linux-gnu:$APPDIR/Qt/libs:$APPDIR/libs:$LD_LIBRARY_PATH
+      APPDIR_LIBRARY_PATH: $APPDIR/usr/lib:$APPDIR/lib/x86_64-linux-gnu:$APPDIR/usr/lib/x86_64-linux-gnu:$APPDIR/Qt/libs:$APPDIR/libs:$APPDIR/usr/lib/x86_64-linux-gnu/pulseaudio:$APPDIR/usr/lib/x86_64-linux-gnu/blas:$APPDIR/usr/lib/x86_64-linux-gnu/lapack:$LD_LIBRARY_PATH
       PATH: '${APPDIR}/:${PATH}'
       QML2_IMPORT_PATH: $APPDIR/Qt/qml
       QT_PLUGIN_PATH: $APPDIR/Qt/plugins
