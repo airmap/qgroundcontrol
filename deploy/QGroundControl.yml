@@ -1,0 +1,82 @@
+version: 1
+
+script:
+  - mkdir -p ${APPDIR}/usr/share/icons/hicolor/128x128/apps
+  - cp ${QGC_CUSTOM_APP_ICON} ${APPDIR}/usr/share/icons/hicolor/128x128/apps/
+  - mkdir -p ${APPDIR}/usr/share/applications
+  - cp ${APPDIR}/qgroundcontrol.desktop ${APPDIR}/usr/share/applications/org.mavlink.qgroundcontrol.desktop
+      
+AppDir:
+  path: ./QGroundControl.AppDir
+
+  app_info:
+    id: org.mavlink.qgroundcontrol
+    name: QGroundControl
+    icon: qgroundcontrol
+    version: 4.0.0
+    exec: QGroundControl
+
+  apt:
+    arch: amd64
+    sources:
+      - sourceline: 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ bionic main restricted universe multiverse'
+        key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32'
+      - sourceline: 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ bionic-updates main restricted universe multiverse'
+      - sourceline: 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ bionic-backports main restricted universe multiverse'
+
+    include:
+      - libgdal20
+      - libgstreamer-gl1.0-0
+      - libasound2
+      - libpulse0
+      - libwayland-cursor0
+      - coreutils
+      - libjson-c3
+      - libsdl2-2.0-0
+
+  files:
+    include:
+      - Qt/*/*
+      
+  runtime:
+    env:
+      APPDIR_LIBRARY_PATH: $APPDIR/usr/lib:$APPDIR/lib/x86_64-linux-gnu:$APPDIR/usr/lib/x86_64-linux-gnu:$APPDIR/Qt/libs:$APPDIR/libs:$APPDIR/usr/lib/x86_64-linux-gnu/pulseaudio:$APPDIR/usr/lib/x86_64-linux-gnu/blas:$APPDIR/usr/lib/x86_64-linux-gnu/lapack:$LD_LIBRARY_PATH
+      PATH: '${APPDIR}/:${PATH}'
+      QML2_IMPORT_PATH: $APPDIR/Qt/qml
+      QT_PLUGIN_PATH: $APPDIR/Qt/plugins
+
+  test:
+    debian:
+      image: appimagecrafters/tests-env:debian-stable
+      command: "./AppRun"
+      use_host_x: True
+      env:
+        - QT_DEBUG_PLUGINS=1
+    centos:
+      image: appimagecrafters/tests-env:centos-7
+      command: "./AppRun"
+      use_host_x: True
+      env:
+        - QT_DEBUG_PLUGINS=1
+    arch:
+      image: appimagecrafters/tests-env:archlinux-latest
+      command: "./AppRun"
+      use_host_x: True
+      env:
+        - QT_DEBUG_PLUGINS=1
+    fedora:
+      image: appimagecrafters/tests-env:fedora-30
+      command: "./AppRun"
+      use_host_x: True
+      env:
+        - QT_DEBUG_PLUGINS=1
+    ubuntu:
+      image: appimagecrafters/tests-env:ubuntu-xenial
+      command: "./AppRun"
+      use_host_x: True
+
+
+AppImage:
+  update-information: None
+  sign-key: None
+  arch: x86_64
