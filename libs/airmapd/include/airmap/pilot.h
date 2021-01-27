@@ -39,6 +39,7 @@ struct AIRMAP_EXPORT Pilot {
   std::string first_name;             ///< The first name of the pilot.
   std::string last_name;              ///< The last name of the pilot.
   std::string email;                  ///< The email AirMap recorded for this pilot.
+  Optional<std::string> user_name;    ///< The pilot's username used to connect to AirMap services.
   Optional<std::string> picture_url;  ///< The URL of a picture showing the pilot.
 
   /// VerificationStatus summarizes the
