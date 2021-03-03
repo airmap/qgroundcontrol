@@ -11,7 +11,6 @@ QMAKE_PROJECT_DEPTH = 0 # undocumented qmake flag to force absolute paths in mak
 
 # These are disabled until proven correct
 DEFINES += QGC_GST_TAISYNC_DISABLED
-DEFINES += QGC_GST_MICROHARD_DISABLED
 
 exists($${OUT_PWD}/qgroundcontrol.pro) {
     error("You must use shadow build (e.g. mkdir build; cd build; qmake ../qgroundcontrol.pro).")
@@ -299,8 +298,6 @@ DebugBuild {
 
 include(src/QtLocationPlugin/QGCLocationPlugin.pri)
 
-# Until pairing can be made to work cleanly on all OS it is turned off
-DEFINES+=QGC_DISABLE_PAIRING
 
 # Pairing
 contains (DEFINES, QGC_DISABLE_PAIRING) {
@@ -446,7 +443,10 @@ SOURCES += \
 
 contains (DEFINES, QGC_ENABLE_PAIRING) {
     SOURCES += \
-        src/PairingManager/aes.cpp
+        src/PairingManager/openssl_aes.cpp \
+        src/PairingManager/openssl_rand.cpp \
+        src/PairingManager/openssl_rsa.cpp \
+        src/PairingManager/openssl_base64.cpp
 }
 
 #
@@ -1263,12 +1263,10 @@ contains (DEFINES, QGC_GST_MICROHARD_DISABLED) {
 
         HEADERS += \
             src/Microhard/MicrohardManager.h \
-            src/Microhard/MicrohardHandler.h \
             src/Microhard/MicrohardSettings.h \
 
         SOURCES += \
             src/Microhard/MicrohardManager.cc \
-            src/Microhard/MicrohardHandler.cc \
             src/Microhard/MicrohardSettings.cc \
     }
 }

@@ -48,7 +48,7 @@ Rectangle {
             contentWidth:       settingsColumn.width
             Column {
                 id:                 settingsColumn
-            width:              _root.width
+                width:              _root.width
                 spacing:            ScreenTools.defaultFontPixelHeight * 0.5
                 anchors.margins:    ScreenTools.defaultFontPixelWidth
                 //-----------------------------------------------------------------
@@ -121,44 +121,34 @@ Rectangle {
                                 Layout.minimumWidth: _labelWidth
                             }
                             QGCLabel {
-                                function getStatus(status) {
-                                    if (status === 1)
-                                        return qsTr("Connected");
-                                    else if (status === -1)
-                                        return qsTr("Login Error")
-                                    else
-                                        return qsTr("Not Connected")
-                                }
-                                text:           getStatus(QGroundControl.microhardManager.connected)
-                                color:          QGroundControl.microhardManager.connected === 1 ? qgcPal.colorGreen : qgcPal.colorRed
+                                text:           QGroundControl.microhardManager.connected
+                                color:          QGroundControl.microhardManager.connected === qsTr("Connected") ? qgcPal.colorGreen : qgcPal.colorRed
                                 Layout.minimumWidth: _valueWidth
                             }
                             QGCLabel {
                                 text:           qsTr("Air Unit:")
+                                visible:        QGroundControl.microhardManager.showRemote
                             }
                             QGCLabel {
-                                function getStatus(status) {
-                                    if (status === 1)
-                                        return qsTr("Connected");
-                                    else if (status === -1)
-                                        return qsTr("Login Error")
-                                    else
-                                        return qsTr("Not Connected")
-                                }
-                                text:           getStatus(QGroundControl.microhardManager.linkConnected)
-                                color:          QGroundControl.microhardManager.linkConnected === 1 ? qgcPal.colorGreen : qgcPal.colorRed
+                                text:           QGroundControl.microhardManager.linkConnected
+                                visible:        QGroundControl.microhardManager.showRemote
+                                color:          QGroundControl.microhardManager.linkConnected === qsTr("Connected") ? qgcPal.colorGreen : qgcPal.colorRed
                             }
                             QGCLabel {
                                 text:           qsTr("Uplink RSSI:")
+                                visible:        QGroundControl.microhardManager.uplinkRSSI < 0
                             }
                             QGCLabel {
-                                text:           QGroundControl.microhardManager.linkConnected && QGroundControl.microhardManager.uplinkRSSI < 0 ? QGroundControl.microhardManager.uplinkRSSI : ""
+                                text:           QGroundControl.microhardManager.uplinkRSSI
+                                visible:        QGroundControl.microhardManager.uplinkRSSI < 0
                             }
                             QGCLabel {
                                 text:           qsTr("Downlink RSSI:")
+                                visible:        QGroundControl.microhardManager.downlinkRSSI < 0
                             }
                             QGCLabel {
-                                text:           QGroundControl.microhardManager.linkConnected && QGroundControl.microhardManager.downlinkRSSI < 0 ? QGroundControl.microhardManager.downlinkRSSI : ""
+                                text:           QGroundControl.microhardManager.downlinkRSSI
+                                visible:        QGroundControl.microhardManager.downlinkRSSI < 0
                             }
                         }
                     }
@@ -232,6 +222,7 @@ Rectangle {
                                 id:             configUserName
                                 text:           QGroundControl.microhardManager.configUserName
                                 enabled:        true
+                                validator:      RegExpValidator { regExp: /^[0-9a-zA-Z_-]{5,32}$/ }
                                 Layout.minimumWidth: _valueWidth
                             }
                             QGCLabel {
@@ -242,6 +233,7 @@ Rectangle {
                                 text:           QGroundControl.microhardManager.configPassword
                                 enabled:        true
                                 echoMode:       TextInput.Password
+                                validator:      RegExpValidator { regExp: /^[0-9a-zA-Z_-!]{5,64}$/ }
                                 Layout.minimumWidth: _valueWidth
                             }
                             QGCLabel {
@@ -252,6 +244,35 @@ Rectangle {
                                 text:           QGroundControl.microhardManager.encryptionKey
                                 enabled:        true
                                 echoMode:       TextInput.Password
+                                validator:      RegExpValidator { regExp: /^[0-9a-zA-Z_-!]{8,64}$/ }
+                                Layout.minimumWidth: _valueWidth
+                            }
+                            QGCLabel {
+                                text:           qsTr("Network ID:")
+                            }
+                            QGCTextField {
+                                id:             networkId
+                                text:           QGroundControl.microhardManager.networkId
+                                enabled:        true
+                                validator:      RegExpValidator { regExp: /^[0-9a-zA-Z_-]{1,64}$/ }
+                                Layout.minimumWidth: _valueWidth
+                            }
+                            QGCLabel {
+                                text:           qsTr("Channel frequency:")
+                            }
+                            QGCComboBox {
+                                id:             connectingChannel
+                                model:          QGroundControl.microhardManager.channelLabels
+                                currentIndex:   QGroundControl.microhardManager.connectingChannel - QGroundControl.microhardManager.channelMin
+                                Layout.minimumWidth: _valueWidth
+                            }
+                            QGCLabel {
+                                text:           qsTr("Channel bandwidth:")
+                            }
+                            QGCComboBox {
+                                id:             connectingBandwidth
+                                model:          QGroundControl.microhardManager.bandwidthLabels
+                                currentIndex:   QGroundControl.microhardManager.connectingBandwidth
                                 Layout.minimumWidth: _valueWidth
                             }
                         }
@@ -266,12 +287,20 @@ Rectangle {
                                 return false
                             }
                             function testEnabled() {
-                                if(localIP.text          === QGroundControl.microhardManager.localIPAddr &&
-                                    remoteIP.text        === QGroundControl.microhardManager.remoteIPAddr &&
-                                    netMask.text         === QGroundControl.microhardManager.netMask &&
-                                    configUserName.text  === QGroundControl.microhardManager.configUserName &&
-                                    configPassword.text  === QGroundControl.microhardManager.configPassword &&
-                                    encryptionKey.text   === QGroundControl.microhardManager.encryptionKey)
+                                if (!configUserName.acceptableInput) return false
+                                if (!configPassword.acceptableInput) return false
+                                if (!encryptionKey.acceptableInput) return false
+                                if (!networkId.acceptableInput) return false
+                                if(localIP.text              === QGroundControl.microhardManager.localIPAddr &&
+                                    remoteIP.text            === QGroundControl.microhardManager.remoteIPAddr &&
+                                    netMask.text             === QGroundControl.microhardManager.netMask &&
+                                    configUserName.text      === QGroundControl.microhardManager.configUserName &&
+                                    configPassword.text      === QGroundControl.microhardManager.configPassword &&
+                                    encryptionKey.text       === QGroundControl.microhardManager.encryptionKey &&
+                                    networkId.text           === QGroundControl.microhardManager.networkId &&
+                                    _connectingChannel       === QGroundControl.microhardManager.connectingChannel &&
+                                    _connectingBandwidth     === QGroundControl.microhardManager.connectingBandwidth
+                                    )
                                     return false
                                 if(!validateIPaddress(localIP.text))  return false
                                 if(!validateIPaddress(remoteIP.text)) return false
@@ -282,9 +311,18 @@ Rectangle {
                             text:               qsTr("Apply")
                             anchors.horizontalCenter:   parent.horizontalCenter
                             onClicked: {
-                                QGroundControl.microhardManager.setIPSettings(localIP.text, remoteIP.text, netMask.text, configUserName.text, configPassword.text, encryptionKey.text)
+                                QGroundControl.microhardManager.setIPSettings(localIP.text,
+                                                                              remoteIP.text,
+                                                                              netMask.text,
+                                                                              configUserName.text,
+                                                                              configPassword.text,
+                                                                              encryptionKey.text,
+                                                                              networkId.text,
+                                                                              _connectingChannel,
+                                                                              _connectingBandwidth)
                             }
-
+                            property var _connectingChannel: connectingChannel.currentIndex + QGroundControl.microhardManager.channelMin
+                            property var _connectingBandwidth: connectingBandwidth.currentIndex
                         }
                     }
                 }
