@@ -89,6 +89,7 @@ contains (CONFIG, QGC_DISABLE_CUSTOM_BUILD) {
     message("Disable custom build override")
 } else {
     exists($$PWD/custom/custom.pri) {
+        QGC_CUSTOM_BUILD_FOLDER=custom
         message("Found custom build")
         CONFIG  += CustomBuild
         DEFINES += QGC_CUSTOM_BUILD

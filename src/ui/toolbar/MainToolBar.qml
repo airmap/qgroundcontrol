@@ -162,6 +162,41 @@ Rectangle {
         }
     }
 
+    //-------------------------------------------------------------------------
+    //-- Launch pairing manager if nothing connected
+    Timer {
+        id:        pairingTimer
+        interval:  5000
+        running:   false;
+        repeat:    false;
+        onTriggered: {
+            if(!activeVehicle && QGroundControl.pairingManager.usePairing) {
+                if(QGroundControl.pairingManager.firstBoot && pairingLoader.item) {
+                    QGroundControl.pairingManager.firstBoot = false
+                    pairingLoader.item.runPairing()
+                }
+            }
+        }
+    }
+    //-------------------------------------------------------------------------
+    //-- Pairing Indicator (not connected)
+    Row {
+        id:                         pairingRow
+        anchors.top:                parent.top
+        anchors.bottom:             parent.bottom
+        anchors.right:              parent.right
+        anchors.rightMargin:        ScreenTools.defaultFontPixelWidth * 2
+        spacing:                    ScreenTools.defaultFontPixelWidth * 2
+        visible:                    !indicatorRow.visible && QGroundControl.pairingManager.usePairing
+        Loader {
+            id:                     pairingLoader
+            anchors.top:            parent.top
+            anchors.bottom:         parent.bottom
+            anchors.margins:        _indicatorMargins
+            source:                 "/custom/PairingIndicator.qml"
+        }
+    }
+
     // Small parameter download progress bar
     Rectangle {
         anchors.bottom: parent.bottom
