@@ -308,6 +308,8 @@ public:
     static constexpr double regionSizeDeg     = 0.1;      // all regions are 0.1deg (~11km) square
     static constexpr double one_second_deg    = 1.0/3600;
     static constexpr double earths_radius_mts = 6371000.;
+    static constexpr double earths_circumfrence_mts = 2 * M_PI * earths_radius_mts;
+    static constexpr double one_deg_mts = earths_circumfrence_mts / 360.0;
 
     /// Point Nemo is a point on Earth furthest from land
     static const QGeoCoordinate pointNemo;

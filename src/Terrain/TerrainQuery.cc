@@ -835,7 +835,7 @@ const UnitTestTerrainQuery::HillRegion UnitTestTerrainQuery::hillRegion{{
         linearSlopeRegion.topRight().longitude() + UnitTestTerrainQuery::regionSizeDeg
     }
 }};
-const double UnitTestTerrainQuery::HillRegion::radius = UnitTestTerrainQuery::regionSizeDeg / UnitTestTerrainQuery::one_second_deg;
+const double UnitTestTerrainQuery::HillRegion::radius = 100.;
 
 UnitTestTerrainQuery::UnitTestTerrainQuery(TerrainQueryInterface* parent)
     :TerrainQueryInterface(parent)
@@ -911,16 +911,19 @@ QList<double> UnitTestTerrainQuery::_requestCoordinateHeights(const QList<QGeoCo
             double fraction = 1.0 * x / dx;
             result.append(std::round(UnitTestTerrainQuery::LinearSlopeRegion::minAMSLElevation + (fraction * UnitTestTerrainQuery::LinearSlopeRegion::totalElevationChange)));
         } else if (hillRegion.contains(coordinate)) {
-            double arc_second_meters = (earths_radius_mts * one_second_deg) * (M_PI / 180);
-            double x = (coordinate.latitude() - hillRegion.center().latitude()) * arc_second_meters / one_second_deg;
-            double y = (coordinate.longitude() - hillRegion.center().longitude()) * arc_second_meters / one_second_deg;
-            double x2y2 = pow(x, 2) + pow(y, 2);
+            double xMeters =
+                (coordinate.latitude() - hillRegion.center().latitude()) *
+                one_deg_mts;
+            double yMeters =
+                (coordinate.longitude() - hillRegion.center().longitude()) *
+                one_deg_mts;
+            double x2y2 = pow(xMeters, 2) + pow(yMeters, 2);
             double r2 = pow(UnitTestTerrainQuery::HillRegion::radius, 2);
             double z;
-            if (x2y2 <= r2) {
-                z = sqrt(r2 - x2y2);
+            if (x2y2 < r2) {
+              z = sqrt(r2 - x2y2) + UnitTestTerrainQuery::Flat10Region::amslElevation;
             } else {
-                z = UnitTestTerrainQuery::Flat10Region::amslElevation;
+              z = UnitTestTerrainQuery::Flat10Region::amslElevation;
             }
             result.append(z);
         } else {
