@@ -97,9 +97,8 @@ QGCCacheWorker::enqueueTask(QGCMapTask* task)
         task->deleteLater();
         return false;
     }
-    _mutex.lock();
+    QMutexLocker lock(&_mutex);
     _taskQueue.enqueue(task);
-    _mutex.unlock();
     if(this->isRunning()) {
         _waitc.wakeAll();
     } else {
@@ -122,12 +121,14 @@ QGCCacheWorker::run()
         _valid = _db->open();
     }
     _deleteBingNoTileTiles();
+    QMutexLocker lock(&_mutex);
     while(true) {
         QGCMapTask* task;
         if(_taskQueue.count()) {
-            _mutex.lock();
             task = _taskQueue.dequeue();
-            _mutex.unlock();
+
+            // Don't need the lock while running the task.
+            lock.unlock();
             switch(task->type()) {
                 case QGCMapTask::taskInit:
                     break;
@@ -171,6 +172,7 @@ QGCCacheWorker::run()
                     _testInternet();
                     break;
             }
+            lock.relock();
             task->deleteLater();
             //-- Check for update timeout
             size_t count = static_cast<size_t>(_taskQueue.count());
@@ -181,22 +183,21 @@ QGCCacheWorker::run()
             }
             if(!count || (time(nullptr) - _lastUpdate > _updateTimeout)) {
                 if(_valid) {
+                    // _updateTotals() will emit a signal. Don't keep the lock
+                    // while any slots process the signal.
+                    lock.unlock();
                     _updateTotals();
+                    lock.relock();
                 }
             }
         } else {
             //-- Wait a bit before shutting things down
-            _waitmutex.lock();
-            unsigned long timeout = 5000;
-            _waitc.wait(&_waitmutex, timeout);
-            _waitmutex.unlock();
-            _mutex.lock();
+            unsigned long timeoutMilliseconds = 5000;
+            _waitc.wait(lock.mutex(), timeoutMilliseconds);
             //-- If nothing to do, close db and leave thread
             if(!_taskQueue.count()) {
-                _mutex.unlock();
                 break;
             }
-            _mutex.unlock();
         }
     }
     if(_db) {

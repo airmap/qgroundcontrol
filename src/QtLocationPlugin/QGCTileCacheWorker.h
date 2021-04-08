@@ -86,7 +86,6 @@ signals:
 private:
     QQueue<QGCMapTask*>     _taskQueue;
     QMutex                  _mutex;
-    QMutex                  _waitmutex;
     QWaitCondition          _waitc;
     QString                 _databasePath;
     QSqlDatabase*           _db;
