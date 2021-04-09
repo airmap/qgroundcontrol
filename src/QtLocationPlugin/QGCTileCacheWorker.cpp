@@ -76,12 +76,12 @@ QGCCacheWorker::quit()
     if(_hostLookupID) {
         QHostInfo::abortHostLookup(_hostLookupID);
     }
-    _mutex.lock();
+    QMutexLocker lock(&_taskQueueMutex);
     while(_taskQueue.count()) {
         QGCMapTask* task = _taskQueue.dequeue();
         delete task;
     }
-    _mutex.unlock();
+    lock.unlock(); // don't need the lock any more
     if(this->isRunning()) {
         _waitc.wakeAll();
     }
@@ -97,8 +97,9 @@ QGCCacheWorker::enqueueTask(QGCMapTask* task)
         task->deleteLater();
         return false;
     }
-    QMutexLocker lock(&_mutex);
+    QMutexLocker lock(&_taskQueueMutex);
     _taskQueue.enqueue(task);
+    lock.unlock(); // don't need to hold the mutex any more
     if(this->isRunning()) {
         _waitc.wakeAll();
     } else {
@@ -118,7 +119,7 @@ QGCCacheWorker::run()
         _connectDB();
     }
     _deleteBingNoTileTiles();
-    QMutexLocker lock(&_mutex);
+    QMutexLocker lock(&_taskQueueMutex);
     while(true) {
         QGCMapTask* task;
         if(_taskQueue.count()) {
