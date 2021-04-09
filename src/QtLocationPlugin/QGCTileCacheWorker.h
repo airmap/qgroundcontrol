@@ -93,7 +93,7 @@ private:
     QWaitCondition                  _waitc;
     QString                         _databasePath;
     QScopedPointer<QSqlDatabase>    _db;
-    bool                            _valid;
+    std::atomic_bool                _valid;
     bool                            _failed;
     quint64                         _defaultSet;
     quint64                         _totalSize;
