@@ -534,7 +534,7 @@ AirMapFlightPlanManager::_uploadFlightPlan()
         _shared.client()->flight_plans().create_by_polygon(params, [this, isAlive](const FlightPlans::Create::Result& result) {
             if (!isAlive.lock()) return;
             if (_state != State::FlightUpload) return;
-            //_state = State::Idle;
+            _state = State::Idle;
             if (result) {
                 _flightPlan = result.value();
                 qCDebug(AirMapManagerLog) << "Flight plan created:" << flightPlanID();
@@ -608,7 +608,7 @@ AirMapFlightPlanManager::_updateFlightPlan(bool interactive)
         _shared.client()->flight_plans().update(params, [this, isAlive](const FlightPlans::Update::Result& result) {
             if (!isAlive.lock()) return;
             if (_state != State::FlightUpdate) return;
-            //_state = State::Idle;
+            _state = State::Idle;
             if (result) {
                 qCDebug(AirMapManagerLog) << "Flight plan updated:" << flightPlanID();
                 _pollBriefing();
@@ -788,7 +788,6 @@ AirMapFlightPlanManager::_pollBriefing()
                 bool rejected       = false;
                 bool accepted       = false;
                 bool pending        = false;
-                bool pending_manual = false;
                 for (const auto& authorization : briefing.evaluation.authorizations) {
                     AirMapFlightAuthorization* pAuth = new AirMapFlightAuthorization(authorization, this);
                     _authorizations.append(pAuth);
@@ -803,15 +802,13 @@ AirMapFlightPlanManager::_pollBriefing()
                         rejected = true;
                         break;
                     case Evaluation::Authorization::Status::pending:
-                        pending = true;
-                        break;
                     case Evaluation::Authorization::Status::manual_authorization:
-                        pending_manual = true;
+                        pending = true;
                         break;
                     }
                 }
                 qCDebug(AirMapManagerLog) << "Flight approval: accepted=" << accepted << "rejected" << rejected << "pending" << pending;
-                if ( (rejected || accepted) && !(pending || pending_manual) ) {
+                if ( (rejected || accepted) && !pending ) {
                     if (rejected) { // rejected has priority
                         _flightPermitStatus = AirspaceFlightPlanProvider::PermitRejected;
                     } else {
@@ -819,9 +816,9 @@ AirMapFlightPlanManager::_pollBriefing()
                     }
                     emit flightPermitStatusChanged();
                 } else {
-                    //-- Pending. Try again.
+                    //-- Pending. Try again after 30s
                     _pollTimer.setSingleShot(true);
-                    _pollTimer.start(pending_manual ? 10000 : 1000);
+                    _pollTimer.start(30 * 1000);
                 }
             }
             emit advisoryChanged();
