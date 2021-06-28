@@ -110,6 +110,7 @@ signals:
 private slots:
     void _pollBriefing                      ();
     void _missionChanged                    ();
+    void _clearFlightPlan                   ();
     void _endFlight                         ();
     void _uploadFlightPlan                  ();
     void _updateFlightPlanOnTimer           ();

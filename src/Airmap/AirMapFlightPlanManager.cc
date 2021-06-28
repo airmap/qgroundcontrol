@@ -43,6 +43,8 @@ AirMapFlightAuthorization::status()
         return AirspaceFlightAuthorization::Rejected;
     case Evaluation::Authorization::Status::pending:
         return AirspaceFlightAuthorization::Pending;
+    case Evaluation::Authorization::Status::manual_authorization:
+        return AirspaceFlightAuthorization::ManualAuthorization;
     case Evaluation::Authorization::Status::accepted_upon_submission:
         return AirspaceFlightAuthorization::AcceptedOnSubmission;
     case Evaluation::Authorization::Status::rejected_upon_submission:
@@ -213,6 +215,7 @@ AirMapFlightPlanManager::startFlightPlanning(PlanMasterController *planControlle
         _planController = planController;
         //-- Get notified of mission changes
         connect(planController->missionController(), &MissionController::missionBoundingCubeChanged, this, &AirMapFlightPlanManager::_missionChanged);
+        connect(planController, &PlanMasterController::currentPlanFileChanged, this, &AirMapFlightPlanManager::_clearFlightPlan);
     }
     //-- Set initial flight start time
     setFlightStartTime(QDateTime::currentDateTime().addSecs(5 * 60));
@@ -617,6 +620,35 @@ AirMapFlightPlanManager::_updateFlightPlan(bool interactive)
     });
 }
 
+void
+AirMapFlightPlanManager::_clearFlightPlan()
+{
+    _flightPlan.reset();
+    _state = State::Idle;
+    _flight.reset();
+    _flightId = "";
+    _flightToEnd = "";
+    _valid = false;
+    _loadingFlightList = false;
+    _flightStartsNow = false;
+    _advisories.clear();
+    _rulesets.clear();
+    _rulesViolation.clear();
+    _rulesInfo.clear();
+    _rulesReview.clear();
+    _rulesFollowing.clear();
+    _briefFeatures.clear();
+    _authorizations.clear();
+    _flightList.clear();
+    _flightDuration = 15 * 60;
+
+    _importantFeatures.clear();
+
+    _airspaceColor = AirspaceAdvisoryProvider::AdvisoryColor::Green;
+    _flightPermitStatus = AirspaceFlightPlanProvider::PermitNone;
+
+}
+
 //-----------------------------------------------------------------------------
 static bool
 adv_sort(QObject* a, QObject* b)
@@ -661,7 +693,7 @@ AirMapFlightPlanManager::_pollBriefing()
     }
     _state = State::FlightPolling;
     FlightPlans::RenderBriefing::Parameters params;
-    params.id            = flightPlanID().toStdString();
+    params.id = flightPlanID().toStdString();
     std::weak_ptr<LifetimeChecker> isAlive(_instance);
     _shared.client()->flight_plans().render_briefing(params, [this, isAlive](const FlightPlans::RenderBriefing::Result& result) {
         if (!isAlive.lock()) return;
@@ -753,9 +785,9 @@ AirMapFlightPlanManager::_pollBriefing()
                 _flightPermitStatus = AirspaceFlightPlanProvider::PermitNotRequired;
                 emit flightPermitStatusChanged();
             } else {
-                bool rejected = false; 
-                bool accepted = false;
-                bool pending  = false;
+                bool rejected       = false;
+                bool accepted       = false;
+                bool pending        = false;
                 for (const auto& authorization : briefing.evaluation.authorizations) {
                     AirMapFlightAuthorization* pAuth = new AirMapFlightAuthorization(authorization, this);
                     _authorizations.append(pAuth);
@@ -770,12 +802,13 @@ AirMapFlightPlanManager::_pollBriefing()
                         rejected = true;
                         break;
                     case Evaluation::Authorization::Status::pending:
+                    case Evaluation::Authorization::Status::manual_authorization:
                         pending = true;
                         break;
                     }
                 }
                 qCDebug(AirMapManagerLog) << "Flight approval: accepted=" << accepted << "rejected" << rejected << "pending" << pending;
-                if ((rejected || accepted) && !pending) {
+                if ( (rejected || accepted) && !pending ) {
                     if (rejected) { // rejected has priority
                         _flightPermitStatus = AirspaceFlightPlanProvider::PermitRejected;
                     } else {
@@ -783,9 +816,9 @@ AirMapFlightPlanManager::_pollBriefing()
                     }
                     emit flightPermitStatusChanged();
                 } else {
-                    //-- Pending. Try again.
+                    //-- Pending. Try again after 30s
                     _pollTimer.setSingleShot(true);
-                    _pollTimer.start(1000);
+                    _pollTimer.start(30 * 1000);
                 }
             }
             emit advisoryChanged();
